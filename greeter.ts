@@ -28,12 +28,31 @@ class ArticleSet {
 
 }
 
-interface Person {
-    firstName: string;
-    lastName: string;
+class RedirectTarget {
+    private static instance: RedirectTarget;
+    private target: string;
+
+    private constructor() {
+
+    }
+
+    public static getInstance(): RedirectTarget {
+        if (RedirectTarget.instance == null) {
+            RedirectTarget.instance = new RedirectTarget();
+        }
+        return RedirectTarget.instance;
+    }
+
+    public setLink(link: string) {
+        this.target = link;
+    }
+
+    public getLink() {
+        return this.target;
+    }
+
+
 }
-
-
 
 function getTopNews() {
     var url = 'https://newsapi.org/v2/top-headlines?' +
@@ -45,21 +64,32 @@ function getTopNews() {
             const data = await response.json();
             console.log(data.articles);
             let articles: Article[] = [];
-            for (let i = 0; i < 12; i++) {
+            let completeArticles: number = 0;
+            let i : number = 0;
+
+            while(completeArticles < 12 && i < 20) {
                 let raw = data.articles[i];
-                articles.push(new Article(
-                    raw.title.split(" - ",1)[0],
-                    raw.source.name,
-                    raw.description,
-                    raw.content,
-                    raw.urlToImage,
-                    raw.source.url
-                ));
+                if(articleCheck(data.articles[i])) {
+                    articles.push(new Article(
+                        raw.title.split(" - ",1)[0],
+                        raw.source.name,
+                        raw.description,
+                        raw.content,
+                        raw.urlToImage,
+                        raw.url
+                    )); 
+                    completeArticles++;
+                }
+                i++;
             }
             let articleSet: ArticleSet = ArticleSet.getInstance();
             articleSet.setData(articles);
             populateTopNewsArticles();
         })
+}
+
+function articleCheck(data): boolean {
+    return (data.title && data.source.name && data.description && data.content && data.urlToImage && data.url);
 }
 
 function populateTopNewsArticles() {
@@ -83,21 +113,31 @@ function viewStory(objButton: Object) {
     let articles: Article[] = articleSet.getData();
     let article = articles[objButton.value];
     
+    // set title (site)
     const modal = document.getElementById('storyModal');
     const titleEl = modal.querySelector('.modal-title');
     titleEl.textContent = article.site;
     
+    // set text (content)
     const bodyEl = modal.querySelector('.modal-body>p');
     let content: string = article.content.split("[",1)[0];
-
     bodyEl.textContent = content;
-
-    console.log(bodyEl);
+    
+    // show image
     const image = modal.querySelector('.modal-body>div>img');
-    console.log(image);
     image.setAttribute('src',article.imageUrl);
+
+    // link to external site
+    console.log(article.url);
+    RedirectTarget.getInstance().setLink(article.url);
+
 }
 
+function redirect() {
+    let url: string = RedirectTarget.getInstance().getLink();
+    console.log(url);
+    window.open(url,'_blank');
+}
 window.onload = function () {
 
     getTopNews();

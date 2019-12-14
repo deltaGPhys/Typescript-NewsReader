@@ -63,6 +63,23 @@ var ArticleSet = /** @class */ (function () {
     };
     return ArticleSet;
 }());
+var RedirectTarget = /** @class */ (function () {
+    function RedirectTarget() {
+    }
+    RedirectTarget.getInstance = function () {
+        if (RedirectTarget.instance == null) {
+            RedirectTarget.instance = new RedirectTarget();
+        }
+        return RedirectTarget.instance;
+    };
+    RedirectTarget.prototype.setLink = function (link) {
+        this.target = link;
+    };
+    RedirectTarget.prototype.getLink = function () {
+        return this.target;
+    };
+    return RedirectTarget;
+}());
 function getTopNews() {
     var _this = this;
     var url = 'https://newsapi.org/v2/top-headlines?' +
@@ -71,7 +88,7 @@ function getTopNews() {
     var req = new Request(url);
     fetch(req)
         .then(function (response) { return __awaiter(_this, void 0, void 0, function () {
-        var data, articles, i, raw, articleSet;
+        var data, articles, completeArticles, i, raw, articleSet;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, response.json()];
@@ -79,9 +96,15 @@ function getTopNews() {
                     data = _a.sent();
                     console.log(data.articles);
                     articles = [];
-                    for (i = 0; i < 12; i++) {
+                    completeArticles = 0;
+                    i = 0;
+                    while (completeArticles < 12 && i < 20) {
                         raw = data.articles[i];
-                        articles.push(new Article(raw.title.split(" - ", 1)[0], raw.source.name, raw.description, raw.content, raw.urlToImage, raw.source.url));
+                        if (articleCheck(data.articles[i])) {
+                            articles.push(new Article(raw.title.split(" - ", 1)[0], raw.source.name, raw.description, raw.content, raw.urlToImage, raw.url));
+                            completeArticles++;
+                        }
+                        i++;
                     }
                     articleSet = ArticleSet.getInstance();
                     articleSet.setData(articles);
@@ -90,6 +113,9 @@ function getTopNews() {
             }
         });
     }); });
+}
+function articleCheck(data) {
+    return (data.title && data.source.name && data.description && data.content && data.urlToImage && data.url);
 }
 function populateTopNewsArticles() {
     var topStories = document.getElementById('topStories').getElementsByClassName("col-md-4");
@@ -108,16 +134,25 @@ function viewStory(objButton) {
     var articleSet = ArticleSet.getInstance();
     var articles = articleSet.getData();
     var article = articles[objButton.value];
+    // set title (site)
     var modal = document.getElementById('storyModal');
     var titleEl = modal.querySelector('.modal-title');
     titleEl.textContent = article.site;
+    // set text (content)
     var bodyEl = modal.querySelector('.modal-body>p');
     var content = article.content.split("[", 1)[0];
     bodyEl.textContent = content;
-    console.log(bodyEl);
+    // show image
     var image = modal.querySelector('.modal-body>div>img');
-    console.log(image);
     image.setAttribute('src', article.imageUrl);
+    // link to external site
+    console.log(article.url);
+    RedirectTarget.getInstance().setLink(article.url);
+}
+function redirect() {
+    var url = RedirectTarget.getInstance().getLink();
+    console.log(url);
+    window.open(url, '_blank');
 }
 window.onload = function () {
     getTopNews();
