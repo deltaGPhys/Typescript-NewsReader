@@ -2,3 +2,34 @@ body div.newsContainer {
   margin-left: 75px;
   margin-right: 75px;
 }
+
+.jumbotron {
+  padding:20px;
+}
+
+.jumbotron > .foot {
+  text-align:right;
+}
+
+.newsContainer > .row > .col-md-4 {
+  visibility:hidden;
+}
+
+footer {
+  text-align:right; 
+  margin-right:0px;
+}
+
+.modal-header .close {
+  margin-top: -20px;
+  color: #FFF;
+}
+
+.modal-header {
+  background-color: #337ab7;
+  color: #FFF;
+}
+
+.modal-body > div {
+  text-align:center;
+}

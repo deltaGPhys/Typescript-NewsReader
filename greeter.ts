@@ -1,6 +1,6 @@
 class Article {
     // public vars in constructor don't need to be declared :)
-    constructor(public title: string, public site: string, public description: string, public content: string, public imageUrl: string) {
+    constructor(public title: string, public site: string, public description: string, public content: string, public imageUrl: string, public url: string) {
     }
 }
 
@@ -45,42 +45,36 @@ function getTopNews() {
             const data = await response.json();
             console.log(data.articles);
             let articles: Article[] = [];
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < 12; i++) {
                 let raw = data.articles[i];
                 articles.push(new Article(
                     raw.title.split(" - ",1)[0],
                     raw.source.name,
                     raw.description,
                     raw.content,
-                    raw.urlToImage
+                    raw.urlToImage,
+                    raw.source.url
                 ));
             }
             let articleSet: ArticleSet = ArticleSet.getInstance();
             articleSet.setData(articles);
-            console.log(articles);
-            console.log(articleSet.getData());
             populateTopNewsArticles();
         })
 }
 
 function populateTopNewsArticles() {
-    const topStories = document.getElementById('topStories');
+    const topStories = document.getElementById('topStories').getElementsByClassName("col-md-4");
+    console.log(topStories);
     let articleSet: ArticleSet = ArticleSet.getInstance();
     let articles: Article[] = articleSet.getData();
-    for (let i = 0; i < 3; i++) {
-        // console.log(topStories.children[i]);
-        // console.log(topStories.children[i].children[0].getElementsByTagName('H3'));
 
-        // let title: string = articles[i].title.split(" - ",1);
-        // let site: string = articles[i].source.name;
-        // let description: string = articles[i].description;
-        // let content: string = articles[i].content;
+    for (let i = 0; i < 12; i++) {
         
-        topStories.children[i].children[0].getElementsByTagName('H3')[0].textContent = articles[i].title;
-        topStories.children[i].children[0].getElementsByTagName('H4')[0].textContent = articles[i].site;
-        topStories.children[i].children[0].getElementsByTagName('P')[0].textContent = articles[i].description;
-        topStories.children[i].children[0].getElementsByTagName('BUTTON')[0].value = i;
-        
+        topStories[i].getElementsByTagName('H3')[0].textContent = articles[i].title;
+        topStories[i].getElementsByTagName('H4')[0].textContent = articles[i].site;
+        topStories[i].getElementsByTagName('P')[0].textContent = articles[i].description;
+        topStories[i].getElementsByTagName('BUTTON')[0].value = i;
+        topStories[i].setAttribute("style", "visibility:visible;");
     }
 }
 
@@ -91,12 +85,17 @@ function viewStory(objButton: Object) {
     
     const modal = document.getElementById('storyModal');
     const titleEl = modal.querySelector('.modal-title');
-    titleEl.textContent = article.title;
+    titleEl.textContent = article.site;
     
-    const bodyEl = modal.querySelector('.modal-body');
-    bodyEl.textContent = article.content;
+    const bodyEl = modal.querySelector('.modal-body>p');
+    let content: string = article.content.split("[",1)[0];
 
+    bodyEl.textContent = content;
 
+    console.log(bodyEl);
+    const image = modal.querySelector('.modal-body>div>img');
+    console.log(image);
+    image.setAttribute('src',article.imageUrl);
 }
 
 window.onload = function () {

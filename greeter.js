@@ -36,12 +36,13 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var Article = /** @class */ (function () {
     // public vars in constructor don't need to be declared :)
-    function Article(title, site, description, content, imageUrl) {
+    function Article(title, site, description, content, imageUrl, url) {
         this.title = title;
         this.site = site;
         this.description = description;
         this.content = content;
         this.imageUrl = imageUrl;
+        this.url = url;
     }
     return Article;
 }());
@@ -78,14 +79,12 @@ function getTopNews() {
                     data = _a.sent();
                     console.log(data.articles);
                     articles = [];
-                    for (i = 0; i < 3; i++) {
+                    for (i = 0; i < 12; i++) {
                         raw = data.articles[i];
-                        articles.push(new Article(raw.title.split(" - ", 1)[0], raw.source.name, raw.description, raw.content, raw.urlToImage));
+                        articles.push(new Article(raw.title.split(" - ", 1)[0], raw.source.name, raw.description, raw.content, raw.urlToImage, raw.source.url));
                     }
                     articleSet = ArticleSet.getInstance();
                     articleSet.setData(articles);
-                    console.log(articles);
-                    console.log(articleSet.getData());
                     populateTopNewsArticles();
                     return [2 /*return*/];
             }
@@ -93,20 +92,16 @@ function getTopNews() {
     }); });
 }
 function populateTopNewsArticles() {
-    var topStories = document.getElementById('topStories');
+    var topStories = document.getElementById('topStories').getElementsByClassName("col-md-4");
+    console.log(topStories);
     var articleSet = ArticleSet.getInstance();
     var articles = articleSet.getData();
-    for (var i = 0; i < 3; i++) {
-        // console.log(topStories.children[i]);
-        // console.log(topStories.children[i].children[0].getElementsByTagName('H3'));
-        // let title: string = articles[i].title.split(" - ",1);
-        // let site: string = articles[i].source.name;
-        // let description: string = articles[i].description;
-        // let content: string = articles[i].content;
-        topStories.children[i].children[0].getElementsByTagName('H3')[0].textContent = articles[i].title;
-        topStories.children[i].children[0].getElementsByTagName('H4')[0].textContent = articles[i].site;
-        topStories.children[i].children[0].getElementsByTagName('P')[0].textContent = articles[i].description;
-        topStories.children[i].children[0].getElementsByTagName('BUTTON')[0].value = i;
+    for (var i = 0; i < 12; i++) {
+        topStories[i].getElementsByTagName('H3')[0].textContent = articles[i].title;
+        topStories[i].getElementsByTagName('H4')[0].textContent = articles[i].site;
+        topStories[i].getElementsByTagName('P')[0].textContent = articles[i].description;
+        topStories[i].getElementsByTagName('BUTTON')[0].value = i;
+        topStories[i].setAttribute("style", "visibility:visible;");
     }
 }
 function viewStory(objButton) {
@@ -115,9 +110,14 @@ function viewStory(objButton) {
     var article = articles[objButton.value];
     var modal = document.getElementById('storyModal');
     var titleEl = modal.querySelector('.modal-title');
-    titleEl.textContent = article.title;
-    var bodyEl = modal.querySelector('.modal-body');
-    bodyEl.textContent = article.content;
+    titleEl.textContent = article.site;
+    var bodyEl = modal.querySelector('.modal-body>p');
+    var content = article.content.split("[", 1)[0];
+    bodyEl.textContent = content;
+    console.log(bodyEl);
+    var image = modal.querySelector('.modal-body>div>img');
+    console.log(image);
+    image.setAttribute('src', article.imageUrl);
 }
 window.onload = function () {
     getTopNews();
