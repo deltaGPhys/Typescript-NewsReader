@@ -88,41 +88,66 @@ function getTopNews() {
     var req = new Request(url);
     fetch(req)
         .then(function (response) { return __awaiter(_this, void 0, void 0, function () {
-        var data, articles, completeArticles, i, raw, articleSet;
+        var data;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, response.json()];
                 case 1:
                     data = _a.sent();
-                    console.log(data.articles);
-                    articles = [];
-                    completeArticles = 0;
-                    i = 0;
-                    while (completeArticles < 12 && i < 20) {
-                        raw = data.articles[i];
-                        if (articleCheck(data.articles[i])) {
-                            articles.push(new Article(raw.title.split(" - ", 1)[0], raw.source.name, raw.description, raw.content, raw.urlToImage, raw.url));
-                            completeArticles++;
-                        }
-                        i++;
-                    }
-                    articleSet = ArticleSet.getInstance();
-                    articleSet.setData(articles);
-                    populateTopNewsArticles();
+                    parseArticles(data);
+                    populateNewsArticles();
                     return [2 /*return*/];
             }
         });
     }); });
 }
+function searchNews() {
+    var _this = this;
+    var searchBox = document.getElementById('searchBox');
+    var text = searchBox.value;
+    var url = 'https://newsapi.org/v2/everything?' +
+        'q=' + text + '&' +
+        'sortBy=popularity&' +
+        'apiKey=d5a8f13f25e94786a1d4a394a097eed1';
+    var req = new Request(url);
+    fetch(req)
+        .then(function (response) { return __awaiter(_this, void 0, void 0, function () {
+        var data;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, response.json()];
+                case 1:
+                    data = _a.sent();
+                    parseArticles(data);
+                    populateNewsArticles();
+                    return [2 /*return*/];
+            }
+        });
+    }); });
+}
+function parseArticles(data) {
+    var articles = [];
+    var completeArticles = 0;
+    var i = 0;
+    while (completeArticles < 9 && i < 20) {
+        var raw = data.articles[i];
+        if (articleCheck(data.articles[i])) {
+            articles.push(new Article(raw.title.split(" - ", 1)[0], raw.source.name, raw.description, raw.content, raw.urlToImage, raw.url));
+            completeArticles++;
+        }
+        i++;
+    }
+    var articleSet = ArticleSet.getInstance();
+    articleSet.setData(articles);
+}
 function articleCheck(data) {
     return (data.title && data.source.name && data.description && data.content && data.urlToImage && data.url);
 }
-function populateTopNewsArticles() {
+function populateNewsArticles() {
     var topStories = document.getElementById('topStories').getElementsByClassName("col-md-4");
-    console.log(topStories);
     var articleSet = ArticleSet.getInstance();
     var articles = articleSet.getData();
-    for (var i = 0; i < 12; i++) {
+    for (var i = 0; i < 9; i++) {
         topStories[i].getElementsByTagName('H3')[0].textContent = articles[i].title;
         topStories[i].getElementsByTagName('H4')[0].textContent = articles[i].site;
         topStories[i].getElementsByTagName('P')[0].textContent = articles[i].description;
@@ -146,12 +171,10 @@ function viewStory(objButton) {
     var image = modal.querySelector('.modal-body>div>img');
     image.setAttribute('src', article.imageUrl);
     // link to external site
-    console.log(article.url);
     RedirectTarget.getInstance().setLink(article.url);
 }
 function redirect() {
     var url = RedirectTarget.getInstance().getLink();
-    console.log(url);
     window.open(url, '_blank');
 }
 window.onload = function () {

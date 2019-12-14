@@ -62,48 +62,70 @@ function getTopNews() {
     fetch(req)
         .then(async (response) => {
             const data = await response.json();
-            console.log(data.articles);
-            let articles: Article[] = [];
-            let completeArticles: number = 0;
-            let i : number = 0;
-
-            while(completeArticles < 12 && i < 20) {
-                let raw = data.articles[i];
-                if(articleCheck(data.articles[i])) {
-                    articles.push(new Article(
-                        raw.title.split(" - ",1)[0],
-                        raw.source.name,
-                        raw.description,
-                        raw.content,
-                        raw.urlToImage,
-                        raw.url
-                    )); 
-                    completeArticles++;
-                }
-                i++;
-            }
-            let articleSet: ArticleSet = ArticleSet.getInstance();
-            articleSet.setData(articles);
-            populateTopNewsArticles();
+            parseArticles(data);
+            
+            populateNewsArticles();
         })
+}
+
+function searchNews() {
+    let searchBox = document.getElementById('searchBox');
+    let text = searchBox.value;
+
+    var url = 'https://newsapi.org/v2/everything?' +
+          'q='+text+'&' +
+          'sortBy=popularity&' +
+          'apiKey=d5a8f13f25e94786a1d4a394a097eed1';
+    var req = new Request(url);
+    fetch(req)
+        .then(async (response) => {
+            const data = await response.json();
+        
+            parseArticles(data);
+            
+            populateNewsArticles();
+        })
+}
+
+function parseArticles (data) {
+    let articles: Article[] = [];
+    let completeArticles: number = 0;
+    let i : number = 0;
+
+    while(completeArticles < 9 && i < 20) {
+        let raw = data.articles[i];
+        if(articleCheck(data.articles[i])) {
+            articles.push(new Article(
+                raw.title.split(" - ",1)[0],
+                raw.source.name,
+                raw.description,
+                raw.content,
+                raw.urlToImage,
+                raw.url
+            )); 
+            completeArticles++;
+        }
+        i++;
+    }
+    let articleSet: ArticleSet = ArticleSet.getInstance();
+    articleSet.setData(articles);
 }
 
 function articleCheck(data): boolean {
     return (data.title && data.source.name && data.description && data.content && data.urlToImage && data.url);
 }
 
-function populateTopNewsArticles() {
+function populateNewsArticles() {
     const topStories = document.getElementById('topStories').getElementsByClassName("col-md-4");
-    console.log(topStories);
     let articleSet: ArticleSet = ArticleSet.getInstance();
     let articles: Article[] = articleSet.getData();
 
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 9; i++) {
         
         topStories[i].getElementsByTagName('H3')[0].textContent = articles[i].title;
         topStories[i].getElementsByTagName('H4')[0].textContent = articles[i].site;
         topStories[i].getElementsByTagName('P')[0].textContent = articles[i].description;
-        topStories[i].getElementsByTagName('BUTTON')[0].value = i;
+        (topStories[i].getElementsByTagName('BUTTON')[0] as any).value = i;
         topStories[i].setAttribute("style", "visibility:visible;");
     }
 }
@@ -111,7 +133,7 @@ function populateTopNewsArticles() {
 function viewStory(objButton: Object) {
     let articleSet: ArticleSet = ArticleSet.getInstance();
     let articles: Article[] = articleSet.getData();
-    let article = articles[objButton.value];
+    let article = articles[(objButton as any).value];
     
     // set title (site)
     const modal = document.getElementById('storyModal');
@@ -128,14 +150,12 @@ function viewStory(objButton: Object) {
     image.setAttribute('src',article.imageUrl);
 
     // link to external site
-    console.log(article.url);
     RedirectTarget.getInstance().setLink(article.url);
 
 }
 
 function redirect() {
     let url: string = RedirectTarget.getInstance().getLink();
-    console.log(url);
     window.open(url,'_blank');
 }
 window.onload = function () {
